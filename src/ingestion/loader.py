@@ -3,8 +3,15 @@ import pandas as pd
 from pypdf import PdfReader
 
 def load_paths(root: Path):
-    return [p for p in root.rglob("*") if p.suffix.lower() in {".pdf", ".md", ".txt", ".csv"}]
-
+    # Only index processed files to keep things lean
+    paths = []
+    for p in root.rglob("*"):
+        if p.suffix.lower() in {".pdf", ".md", ".txt"}:
+            paths.append(p)
+        elif p.suffix.lower() == ".csv":
+            if p.name == "careerconnect_master.csv" or p.name.endswith("_processed.csv"):
+                paths.append(p)
+    return paths
 def read_text(path: Path) -> list[dict]:
     suf = path.suffix.lower()
     if suf == ".pdf":

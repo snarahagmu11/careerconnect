@@ -1,4 +1,5 @@
-import streamlit as st      st.write as pd
+import streamlit as st
+import pandas as pd
 
 # Basic page config
 st.set_page_config(page_title="CareerConnect", layout="wide")

@@ -14,4 +14,4 @@ huggingface_hub==0.25.2
 # Frontend (Streamlit UI)
 streamlit==1.39.0
 requests==2.32.3
-pymupdf==1.24.10  
+ 

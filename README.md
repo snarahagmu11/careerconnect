@@ -33,16 +33,16 @@ This project demonstrates a complete **RAG (Retrieval-Augmented Generation)** pi
 ## Features  
 
 ### Resume Skill Extraction  
-NLP and taxonomy-based extraction (ESCO/O*NET).
+- NLP and taxonomy-based extraction (ESCO/O*NET).
 
 ### Semantic Job Retrieval  
-Top-k job matches using FAISS index + cosine similarity.
+- Top-k job matches using FAISS index + cosine similarity.
 
 ### Personalized Upskilling  
-Recommends Udemy courses linked to missing technical skills.
+- Recommends Udemy courses linked to missing technical skills.
 
 ### LLM Summary Generation  
-Mistral-7B generates a strengths-focused multi-section profile summary.
+- Mistral-7B generates a strengths-focused multi-section profile summary.
 
 ## Methodology  
 

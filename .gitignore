@@ -1,0 +1,55 @@
+cat > .gitignore << 'EOF'
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Environments
+venv/
+env/
+testenv/
+testnlpbot/
+.venv/
+
+# Logs
+logs/
+*.log
+
+# Streamlit cache
+.streamlit/
+
+# Large datasets (ignore all data/)
+data/*
+
+# Allow empty folder placeholders if needed
+!data/.gitkeep
+
+# Uploaded files
+data/raw/uploaded_resume.pdf
+
+# FAISS index and DBs
+data/index/
+data/db/
+
+# Temporary scripts & backups
+scripts/preprocess_data1.py
+scripts/preprocess_data2.py
+scripts/preprocess_data_n.py
+src/api/routes_*.py
+src/main1.py
+src/main2.py
+src/main_o.py
+src/embedding/vector_store_o.py
+
+# Dev/test files
+t.py
+clean_job_titles.csv
+evaluation_results.csv
+docker-compose.yml
+
+# IDE settings
+.vscode/
+.idea/
+EOF
+

@@ -1,0 +1,23 @@
+app:
+  name: careerconnect-backend
+  top_k: 5
+
+# Embedding chunking
+chunk_size: 800
+chunk_overlap: 120
+
+# Embedding model config
+embedding_model: sentence-transformers/all-MiniLM-L6-v2
+embedding_device: cuda
+embed_batch: 64
+
+# Unified FAISS Index (Option 1)
+vector_store:
+  persist_directory: "data/index"
+  index_dim: 384
+
+# LLM model
+llm:
+  model_id: mistralai/Mistral-7B-Instruct-v0.3
+  max_tokens: 2048
+

@@ -66,3 +66,27 @@ uvicorn src.api_server_http:app --host 0.0.0.0 --port 8010
 ```bash
 streamlit run src/ui/ui_app.py --server.port 8501
 ```
+
+### Why These Ports?
+
+We use **two different ports** because the project has **two separate services** running:
+
+1. **Backend API → Port 8010**  
+   - This is where FastAPI runs.  
+   - It handles the heavy work reading resumes, embedding text, searching FAISS, generating summaries, etc.  
+   - Streamlit calls this API internally.  
+   - Using a dedicated port ensures the backend stays stable and doesn’t clash with the UI.
+
+2. **Streamlit UI → Port 8501**  
+   - This is fot **frontend** where users upload resumes and see results.  
+   - Streamlit always defaults to port 8501 which is a common UI port used in many projects.  
+   - Keeping it separate avoids conflicts with the backend service.
+
+### If You Run This On Another Machine
+
+If you are running this on a server, HPC cluster, or cloud machine:
+
+- Make sure **both ports (8010 and 8501)** are forwarded or accessible.
+- Replace `127.0.0.1` with the machine’s IP when accessing through a browser.
+- Example: ```http://<server-address>:8501```
+

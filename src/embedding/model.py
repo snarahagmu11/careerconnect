@@ -13,7 +13,6 @@ EMBED_MODEL = os.getenv("EMBED_MODEL", "sentence-transformers/all-MiniLM-L6-v2")
 BATCH_SIZE = int(os.getenv("EMBED_BATCH_SIZE", "64"))
 DEVICE = "cuda" if torch.cuda.is_available() and os.getenv("USE_GPU","1") != "0" else "cpu"
 
-# --- simple on-disk cache (sqlite) ---
 CACHE_DIR = Path(os.getenv("EMBED_CACHE_DIR", "data/index"))
 CACHE_DIR.mkdir(parents=True, exist_ok=True)
 CACHE_DB = CACHE_DIR / "embed_cache.sqlite3"
@@ -45,7 +44,6 @@ def _put_cached(mapping: dict, dim: int):
     _cur.executemany("INSERT OR REPLACE INTO cache (sha1, dim, vec) VALUES (?, ?, ?)", rows)
     _conn.commit()
 
-# --- model ---
 _model = SentenceTransformer(EMBED_MODEL, device=DEVICE)
 _dim = _model.get_sentence_embedding_dimension()
 
@@ -58,12 +56,9 @@ def embed_texts(texts: List[str]) -> np.ndarray:
 
     hashes = [_sha1(t or "") for t in texts]
     cached = _get_cached(list(set(hashes)))
-
-    # Collect indices for cache miss
     miss_idx = [i for i, h in enumerate(hashes) if h not in cached]
     miss_texts = [texts[i] for i in miss_idx]
 
-    # Compute missing
     new_map = {}
     if miss_texts:
         for i in tqdm(range(0, len(miss_texts), BATCH_SIZE), desc="Embedding (misses)"):
@@ -74,7 +69,6 @@ def embed_texts(texts: List[str]) -> np.ndarray:
         _put_cached(new_map, _dim)
         cached.update(new_map)
 
-    # Reassemble in input order
     mat = np.vstack([cached[h] for h in hashes]).astype(np.float32)
     return mat
 

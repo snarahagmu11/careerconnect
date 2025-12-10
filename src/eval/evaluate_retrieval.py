@@ -139,7 +139,7 @@ def main():
 
     df = pd.DataFrame(results)
     df.to_csv("evaluation_results.csv", index=False)
-    print("\n✔ Saved → evaluation_results.csv")
+    print("\nSaved → evaluation_results.csv")
     print(df)
 
 

@@ -3,111 +3,101 @@
 import sys
 from pathlib import Path
 
+# Add project root to path
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.append(str(ROOT))
 
 import pandas as pd
 from tqdm import tqdm
-import random
 
 from src.embedding.embedder import embed_query
 from src.embedding.vector_store import FaissStore
 from src.utils.config_loader import load_config
 
 
-# -------------------------------------------------------------------
-# STRONG MATCH (12)
-# -------------------------------------------------------------------
-STRONG_MATCH = [
+EVAL_QUERIES = [
+
     "Supply Chain Analyst",
     "Systems Administrator",
-    "Supplier Quality Engineer",
     "Support Specialist",
+    "Supervisor/Manager Part-Time",
+
+    "Supplier Quality Engineer",
+    "Supply Chain Coordinator",
     "System Engineer",
-    "Marketing Coordinator",
-    "Project Architect",
-    "Structural Engineer",
-    "Customer Service Associate",
-    "IT Support Technician",
-    "Building Engineer",
-    "Content Writer Communications",
-]
 
 
-# -------------------------------------------------------------------
-# NEGATIVE / NON-MATCH (5)
-# -------------------------------------------------------------------
-NEGATIVE = [
     "AI Research Scientist",
-    "Blockchain Developer",
-    "Deep Learning Strategist",
-    "Senior Astro Physicist",
     "Nurse Practitioner Technician",
+    "Blockchain Developer",
 ]
 
 
-# -------------------------------------------------------------------
-# AUTO-GENERATED MIXED QUERIES (183)
-# -------------------------------------------------------------------
-base_terms = [
-    "coordinator", "assistant", "operations", "remote job",
-    "entry level", "manager", "developer", "technician",
-    "office role", "shift supervisor", "warehouse associate",
-    "consultant", "director", "analyst", "processor",
-]
-
-def generate_mixed_queries(n=183):
-    queries = []
-    for _ in range(n):
-        q = f"{random.choice(base_terms)} in {random.choice(base_terms)}"
-        queries.append(q)
-    return queries
-
-MIXED = generate_mixed_queries(183)
-
-
-# -------------------------------------------------------------------
-# FINAL → 200 QUERIES
-# -------------------------------------------------------------------
-EVAL_QUERIES = STRONG_MATCH + NEGATIVE + MIXED
-assert len(EVAL_QUERIES) == 200
-
-
-# -------------------------------------------------------------------
-# GROUND TRUTH
-# -------------------------------------------------------------------
 GROUND_TRUTH = {
-    "Supply Chain Analyst": ["Supply Chain Analyst"],
-    "Systems Administrator": ["Systems Administrator"],
-    "Supplier Quality Engineer": ["Supplier Quality Engineer"],
-    "Support Specialist": ["Support Specialist"],
-    "System Engineer": ["System Engineer"],
-    "Marketing Coordinator": ["Marketing Coordinator"],
-    "Project Architect": ["Project Architect"],
-    "Structural Engineer": ["Structural Engineer"],
-    "Customer Service Associate": ["Customer Service Associate"],
-    "IT Support Technician": ["IT Support Technician"],
-    "Building Engineer": ["Building Engineer"],
-    "Content Writer Communications": ["Content Writer", "Content Writer Communications"],
+    "Supply Chain Analyst": [
+        "Supply Chain Analyst",
+        "Supply Chain Analyst II",
+        "Supply Chain Analyst III",
+        "Supply Chain Analyst IV",
+    ],
+
+    "Systems Administrator": [
+        "System Administrator",
+        "System Administrator I",
+        "System Administrator II",
+        "System Administrator III",
+        "System Administrator Senior",
+    ],
+
+    "Support Specialist": [
+        "Support Specialist",
+        "Support Specialist (Remote)",
+        "Support Specialist - Village (Sun-Th,8am-4:30pm)",
+        "Support Specialist - Village (Tues-Sat, 8am-4:30pm)",
+    ],
+
+    "Supervisor/Manager Part-Time": [
+        "Supervisor/Manager Part-Time Gateway Center",
+        "Supervisor/Manager Part-Time Kings Plaza",
+        "Supervisor/Manager Part-Time Queens Center Mall",
+        "Supervisor/Manager-Part Time - Hamilton Place",
+    ],
+
+    "Supplier Quality Engineer": [
+        "Supplier Quality Engineer",
+        "Supplier Quality Engineer I/II",
+        "Supplier Quality Engineer II",
+        "Supplier Quality Engineer III",
+    ],
+
+    "Supply Chain Coordinator": [
+        "Supply Chain Coordinator",
+        "Supply Chain Coordinator (Customer Service)",
+        "Supply Chain Coordinator (Logistics)",
+    ],
+
+    "System Engineer": [
+        "System Engineer",
+        "System Engineer I",
+        "System Engineer II",
+        "System Engineer III",
+    ],
+
+    "AI Research Scientist": [],
+    "Nurse Practitioner Technician": [],
+    "Blockchain Developer": [],
 }
 
 
-# -------------------------------------------------------------------
-# METRICS
-# -------------------------------------------------------------------
 def precision_at_k(retrieved, relevant, k=5):
     retrieved_k = retrieved[:k]
     rel = sum(1 for r in retrieved_k if r in relevant)
     return rel / k
-
-
 def mean_reciprocal_rank(retrieved, relevant):
     for idx, item in enumerate(retrieved, start=1):
         if item in relevant:
             return 1 / idx
     return 0.0
-
-
 def ndcg_at_k(retrieved, relevant, k=10):
     import math
     dcg = 0.0
@@ -115,17 +105,11 @@ def ndcg_at_k(retrieved, relevant, k=10):
         if item in relevant:
             dcg += 1 / math.log2(i + 1)
 
-    ideal = sum(1 / math.log2(i + 1) for i in range(1, min(len(relevant), k) + 1))
+    ideal = sum(
+        1 / math.log2(i + 1) for i in range(1, min(len(relevant), k) + 1)
+    )
     return dcg / ideal if ideal > 0 else 0.0
-
-
-# -------------------------------------------------------------------
-# MAIN
-# -------------------------------------------------------------------
 def main():
-
-    print("🔍 Loading FAISS index...")
-
     cfg = load_config()
     store = FaissStore(
         persist_directory=cfg["vector_store"]["persist_directory"],
@@ -135,10 +119,11 @@ def main():
 
     results = []
 
-    for query in tqdm(EVAL_QUERIES, desc="Evaluating 200 Queries"):
+    for query in tqdm(EVAL_QUERIES, desc="Evaluating Queries"):
         qvec = embed_query(query)
+
         hits = store.search(qvec, top_k=10)
-        retrieved_titles = [h.get("title", "") for h in hits]
+        retrieved_titles = [h["title"] for h in hits]
 
         relevant = GROUND_TRUTH.get(query, [])
 
@@ -155,22 +140,9 @@ def main():
 
     df = pd.DataFrame(results)
     df.to_csv("evaluation_results.csv", index=False)
-
-    print("\n✔ Saved → evaluation_results.csv\n")
-    print(df.head(20))
-
-    # -------------------------------------------------------------------
-    # PRINT AVERAGES
-    # -------------------------------------------------------------------
-    print("\n==========================")
-    print("📊 AVERAGE METRICS")
-    print("==========================")
-    print("Avg Precision@5:", round(df["precision@5"].mean(), 4))
-    print("Avg nDCG@10:", round(df["nDCG@10"].mean(), 4))
-    print("Avg MRR:", round(df["MRR"].mean(), 4))
-    print("==========================\n")
+    print("\n✔ Saved → evaluation_results.csv")
+    print(df)
 
 
 if __name__ == "__main__":
     main()
-

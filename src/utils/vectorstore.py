@@ -17,9 +17,6 @@ from typing import List, Dict, Optional
 import numpy as np
 import faiss
 
-
-# ----------------- helpers -----------------
-
 def sha1_of_path(p: Path, block: int = 1 << 20) -> str:
     """Streaming SHA1 of a file."""
     h = hashlib.sha1()
@@ -43,9 +40,6 @@ def _to_unit(vecs: np.ndarray, dim: Optional[int] = None) -> np.ndarray:
     vecs = vecs.astype("float32", copy=False)
     faiss.normalize_L2(vecs)
     return vecs
-
-
-# ----------------- FAISS store -----------------
 
 class FaissVectorStore:
     """
@@ -75,8 +69,6 @@ class FaissVectorStore:
         self.meta: List[Dict] = []
         self._loaded: bool = False
 
-    # -------- lifecycle --------
-
     def load(self) -> bool:
         """Load FAISS + meta from disk if available. Returns True if loaded."""
         if self.p_index.exists() and self.p_meta.exists():
@@ -85,7 +77,6 @@ class FaissVectorStore:
                 self.meta = [json.loads(line) for line in f]
             self._loaded = True
             return True
-        # reset to empty
         self.index, self.meta, self._loaded = None, [], False
         return False
 
@@ -98,8 +89,6 @@ class FaissVectorStore:
         with self.p_meta.open("w", encoding="utf-8") as f:
             for m in self.meta:
                 f.write(json.dumps(m, ensure_ascii=False) + "\n")
-
-    # -------- build / append --------
 
     def build_from(self, vecs: np.ndarray, metas: List[Dict]) -> None:
         """Replace the entire index with vecs/metas and save."""
@@ -119,8 +108,6 @@ class FaissVectorStore:
         self.meta.extend(metas)
         self.save()
 
-    # -------- search --------
-
     def search(self, qvec: np.ndarray, top_k: int = 5) -> List[Dict]:
         """Return top_k meta dicts with 'score' added."""
         if self.index is None or self.index.ntotal == 0:
@@ -137,8 +124,6 @@ class FaissVectorStore:
 
     def size(self) -> int:
         return 0 if (self.index is None) else int(self.index.ntotal)
-
-    # -------- fingerprints (for dynamic rebuilds) --------
 
     def read_fingerprints(self) -> Dict[str, str]:
         if self.p_fp.exists():

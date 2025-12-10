@@ -24,29 +24,20 @@ class HuggingFaceLLM:
         self.model_id = model_id or HF_MODEL
         self.max_new_tokens = max_new_tokens or HF_MAX_NEW_TOKENS
 
-        # Load tokenizer & model locally
         self.tokenizer = AutoTokenizer.from_pretrained(self.model_id)
-        # Some Mistral variants may have no pad_token; use eos as pad if needed
         if self.tokenizer.pad_token is None:
             self.tokenizer.pad_token = self.tokenizer.eos_token
-
-        # Use fp16 on GPU, fall back to fp32 on CPU
         dtype = torch.float16 if torch.cuda.is_available() else torch.float32
-
-        # Force GPU explicitly
         cuda_available = torch.cuda.is_available()
-
         self.model = AutoModelForCausalLM.from_pretrained(
             self.model_id,
             torch_dtype=torch.float16 if cuda_available else torch.float32,
-            device_map={"": 0} if cuda_available else "cpu",   # MIG-safe explicit mapping
+            device_map={"": 0} if cuda_available else "cpu", 
         )
 
         if cuda_available:
             self.model.to("cuda")
 
-
-        # Simple text-generation pipeline
         self.pipe = pipeline(
             "text-generation",
             model=self.model,
@@ -68,7 +59,6 @@ class HuggingFaceLLM:
                 pad_token_id=self.tokenizer.eos_token_id,
             )[0]["generated_text"]
 
-            # Strip the prompt from the beginning of the generated text
             if out.startswith(full_prompt):
                 out = out[len(full_prompt):]
             return out.strip()

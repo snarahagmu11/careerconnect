@@ -19,19 +19,15 @@ class FaissStore:
         """
         self.persist_directory.mkdir(parents=True, exist_ok=True)
 
-        # ---- Build FAISS index ----
         index = faiss.IndexFlatL2(self.index_dim)
         index.add(vectors)
 
         self.index = index
-
-        # ---- Write metadata STRICTLY in same order as vectors ----
         metafile = self.persist_directory / "meta.jsonl"
         with metafile.open("w", encoding="utf-8") as f:
             for m in metas:
                 f.write(json.dumps(m) + "\n")
 
-        # ---- Save FAISS index ----
         faiss.write_index(index, str(self.persist_directory / "faiss.index"))
 
     def load(self):
@@ -46,11 +42,9 @@ class FaissStore:
                 print("❗ No index found.")
                 return False
 
-            # Load FAISS index
             self.index = faiss.read_index(str(idx))
             self.meta = []
 
-            # Load metadata lines
             if mfile.exists():
                 with mfile.open("r", encoding="utf-8") as f:
                     for line in f:

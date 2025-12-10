@@ -82,11 +82,3 @@ We use **two different ports** because the project has **two separate services**
    - Streamlit always defaults to port 8501 which is a common UI port used in many projects.  
    - Keeping it separate avoids conflicts with the backend service.
 
-### If You Run This On Another Machine
-
-If you are running this on a server, HPC cluster, or cloud machine:
-
-- Make sure **both ports (8010 and 8501)** are forwarded or accessible.
-- Replace `127.0.0.1` with the machine’s IP when accessing through a browser.
-- Example: ```http://<server-address>:8501```
-

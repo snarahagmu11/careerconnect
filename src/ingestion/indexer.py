@@ -13,7 +13,7 @@ from ..embedding.model import embed_texts
 
 RAW_DIR = Path("data/raw")
 INDEX_DIR = "data/db"
-BATCH = int(os.getenv("INGEST_BATCH", "2048"))  # chunks per embed/add step
+BATCH = int(os.getenv("INGEST_BATCH", "2048"))  
 
 def _read_texts_for_file(p: Path) -> List[Tuple[str, Dict]]:
     suf = p.suffix.lower()
@@ -72,7 +72,6 @@ def ingest_folder_dynamic(folder: Path) -> Dict:
     if previous == current and store.index is not None and store.index.ntotal > 0:
         return {"reused": True, "indexed_chunks": int(store.index.ntotal), "files": list(current.keys())}
 
-    # stream build
     all_chunks: List[str] = []
     all_metas: List[Dict] = []
     for p in paths:
@@ -86,13 +85,12 @@ def ingest_folder_dynamic(folder: Path) -> Dict:
         store.write_fingerprints(current)
         return {"reused": False, "indexed_chunks": 0, "files": list(current.keys())}
 
-    # first batch -> build_from, then append (saves memory)
     first = True
     total = len(all_chunks)
     for i in tqdm(range(0, total, BATCH), desc="Indexing"):
         batch_chunks = all_chunks[i:i+BATCH]
         batch_metas  = all_metas[i:i+BATCH]
-        vecs = embed_texts(batch_chunks)  # returns normalized float32
+        vecs = embed_texts(batch_chunks)  
 
         if first:
             store.build_from(vecs, batch_metas)

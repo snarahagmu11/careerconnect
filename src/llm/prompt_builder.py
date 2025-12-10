@@ -9,8 +9,6 @@ def build_prompt(context_chunks, resume_text):
     - Job Recommendations
     - Career Summary
     """
-
-    # Combine top context snippets
     labeled = [f"[{i+1}] {c}" for i, c in enumerate(context_chunks[:5])]
     ctx = "\n\n".join(labeled)
 
